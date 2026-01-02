@@ -1,10 +1,10 @@
+import { useState } from "react";
 import { Calendar, dateFnsLocalizer } from "react-big-calendar";
 import { format, parse, startOfWeek, getDay } from "date-fns";
+import ptBR from "date-fns/locale/pt-BR";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 
-const locales = {
-  "pt-BR": ("date-fns/locale/pt-BR"),
-};
+const locales = { "pt-BR": ptBR };
 
 const localizer = dateFnsLocalizer({
   format,
@@ -15,15 +15,19 @@ const localizer = dateFnsLocalizer({
 });
 
 export default function CalendarPage() {
-  // Carrega agendamentos do localStorage
-  const agendamentos = JSON.parse(localStorage.getItem("agendamentos")) || [];
+  const [date, setDate] = useState(new Date());
+  const [view, setView] = useState("month");
 
-  // Converte para formato aceito pelo react-big-calendar
-  const events = agendamentos.map((a) => ({
-    title: a.titulo,
-    start: new Date(`${a.data}T${a.hora}`),
-    end: new Date(`${a.data}T${a.hora}`),
-  }));
+  const agendamentos = JSON.parse(localStorage.getItem("agendamentos")) || [];
+  console.log("CalendarPage: agendamentos carregados do localStorage:", agendamentos);
+
+  const events = agendamentos.map((a) => {
+    const start = new Date(`${a.data}T${a.hora}`);
+    const end = new Date(start.getTime() + 60 * 60 * 1000);
+    const evento = { title: a.titulo, start, end };
+    console.log("CalendarPage: evento convertido:", evento);
+    return evento;
+  });
 
   return (
     <div className="p-6">
@@ -34,8 +38,18 @@ export default function CalendarPage() {
         startAccessor="start"
         endAccessor="end"
         style={{ height: 500 }}
-        views={["month", "week", "day"]}   // habilita os botões de visualização
-        toolbar={true}                     // mostra a barra com Today / Back / Next
+        views={["month", "week", "day"]}
+        toolbar={true}
+        date={date}
+        view={view}
+        onNavigate={(newDate, newView) => {
+          console.log("CalendarPage: onNavigate disparado → nova data:", newDate, "view atual:", newView);
+          setDate(newDate);
+        }}
+        onView={(newView) => {
+          console.log("CalendarPage: onView disparado → nova view:", newView);
+          setView(newView);
+        }}
       />
     </div>
   );
